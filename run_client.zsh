@@ -7,5 +7,4 @@ rsync --delete -a /nfs/miniprojects/shuttlexpress/ /root/shuttlexpress
 
 cd /root/shuttlexpress
 
-screen -S shuttleclient -d -m ./shuttle_client.py
-
+exec ./shuttle_client.py
