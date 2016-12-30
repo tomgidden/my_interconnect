@@ -49,18 +49,23 @@ class shuttleProxy(object):
 
         tokens = [
             None,
-            ('irsend','bank1','BANK1_2'), # bed
-            ('irsend','bank3','BANK3_4'), # desk
-            ('irsend','bank3','BANK3_3'), # fluo
-            ('irsend','bank1','BANK1_1'), # fan
-            ('irsend','bank3','BANK3_2')  # Dell monitor
-#            ('url','http://pile/~gid/sleep.php',None), # monitor
+            ('mqtt','/controller/rf/transmit', 1, 2), # bed
+            ('mqtt','/controller/rf/transmit', 3, 4), # desk anglepoise
+            ('mqtt','/controller/rf/transmit', 3, 3), # fluo
+            ('mqtt','/controller/rf/transmit', 1, 1), # fan
+            ('mqtt','/controller/rf/transmit', 3, 2), # Dell monitor
+            #            ('irsend','','bank1','BANK1_2'), # bed
+            #            ('irsend','','bank3','BANK3_4'), # desk
+            #            ('irsend','','bank3','BANK3_3'), # fluo
+            #            ('irsend','','bank1','BANK1_1'), # fan
+            #            ('irsend','','bank3','BANK3_2')  # Dell monitor
+            #            ('url','','http://pile/~gid/sleep.php',None), # monitor
         ]
 
         if val:
             if tokens[button] is not None:
 
-                (cmd, bank, chan) = tokens[button]
+                (cmd, topic, bank, chan) = tokens[button]
 
                 if cmd == 'irsend':
                     try:
@@ -70,6 +75,19 @@ class shuttleProxy(object):
 
                     x = '1' if self.states[chan] else '0'
                     call(['/usr/bin/irsend','SEND_ONCE','--count=3',bank, chan+x])
+
+                elif cmd == 'mqtt' and topic == '/controller/rf/transmit':
+                    bankchan = 'b:{},c:{}'.format(bank,chan)
+                    try:
+                        self.states[bankchan] = not self.states[bankchan]
+                    except:
+                        self.states[bankchan] = True
+
+                    x = '1' if self.states[bankchan] else '0'
+                    val = '{'+'"bank":{},"channel":{},"value":{}'.format(bank,chan,x)+'}'
+
+                    self.mqtt.publish(topic, val)
+                    print val
 
                 elif cmd == 'url':
                     urllib2.urlopen(bank).read()

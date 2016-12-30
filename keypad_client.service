@@ -1,0 +1,17 @@
+[Unit]
+Description=GidTech Keypad client handler
+After=network-online.target
+
+[Service]
+ExecStart=/root/shuttlexpress/run_keypad.zsh
+WorkingDirectory=/root/shuttlexpress
+User=root
+Group=daemon
+SyslogIdentifier=keypad_client
+StandardOutput=syslog
+Restart=on-failure
+KillSignal=SIGINT
+#Nice=10
+
+[Install]
+WantedBy=multi-user.target
