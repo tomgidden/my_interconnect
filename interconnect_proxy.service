@@ -1,13 +1,13 @@
 [Unit]
-Description=GidTech ShuttleXpress client handler
+Description=GidTech Interconnect proxy handler
 After=network-online.target
 
 [Service]
-ExecStart=/root/shuttlexpress/run_client.zsh
-WorkingDirectory=/root/shuttlexpress
+ExecStart=/root/interconnect/run_proxy.zsh
+WorkingDirectory=/root/interconnect
 User=root
 Group=daemon
-SyslogIdentifier=shuttlexpress_client
+SyslogIdentifier=interconnect_proxy
 StandardOutput=syslog
 Restart=on-failure
 KillSignal=SIGINT

@@ -3,8 +3,8 @@
 mount /mnt/miniprojects 2>/dev/null
 
 set -e
-rsync --delete -a /nfs/miniprojects/shuttlexpress/ /root/shuttlexpress
+rsync --delete -a /nfs/miniprojects/interconnect/ /root/interconnect
 
-cd /root/shuttlexpress
+cd /root/interconnect
 
 exec ./shuttle_client.py

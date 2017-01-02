@@ -8,9 +8,9 @@ import paho.mqtt.client as paho
 import platform
 import sys
 import os
-import urllib2
+#import urllib2
 import time
-from subprocess import call
+#from subprocess import call
 import struct
 import socket
 import threading
@@ -37,17 +37,30 @@ class MyShuttleXpress(ShuttleXpress):
         ShuttleXpress.__init__(self, fn)
 
     def onButton (self, button, val):
-        str = "/controller/{}/{}/button/{}".format(self.host, self.dev, button)
-        mqtt.publish(str, int(val))
-        print "{}:\t{}".format(str, int(val))
+        if button == 1:
+            str = "/actuator/bedroom/bed_light"
+        elif button == 2:
+            str = "/actuator/bedroom/desk_light"
+        elif button == 3:
+            str = "/actuator/bedroom/desk_fan"
+        elif button == 4:
+            str = "/actuator/bedroom/tower_fan"
+        elif button == 5:
+            str = "/actuator/bedroom/desk_monitor"
+        else:
+            return
+
+        if val:
+            mqtt.publish(str, 'toggle')
+            print "{}:\t{}".format(str, int(val))
 
     def onRing (self, dir):
-        str = '/controller/{}/{}/ring'.format(self.host, self.dev)
+        str = '/actuator/bedroom/blind1/direction'
         mqtt.publish(str, dir)
         print "{}:\t{}".format(str, dir)
 
     def onDial (self, pos, delta):
-        str = '/controller/{}/{}/dial'.format(self.host, self.dev)
+        str = '/actuator/bedroom/blind1/delta'
         mqtt.publish(str, delta)
         print "{}:\t{}".format(str, delta)
 

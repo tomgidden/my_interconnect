@@ -1,13 +1,13 @@
 [Unit]
-Description=GidTech Keypad client handler
+Description=GidTech IR proxy handler
 After=network-online.target
 
 [Service]
-ExecStart=/root/interconnect/run_keypad.zsh
+ExecStart=/root/interconnect/run_irblaster.zsh
 WorkingDirectory=/root/interconnect
 User=root
 Group=daemon
-SyslogIdentifier=keypad_client
+SyslogIdentifier=irblaster
 StandardOutput=syslog
 Restart=on-failure
 KillSignal=SIGINT

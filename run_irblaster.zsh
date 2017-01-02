@@ -7,5 +7,5 @@ rsync --delete -a /nfs/miniprojects/interconnect/ /root/interconnect
 
 cd /root/interconnect
 
-exec ./interconnect_proxy.py
+exec ./irblaster.py
 

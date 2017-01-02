@@ -74,11 +74,25 @@ class MyKeypad (object):
 
     def onButton (self, button, state):
         if state:
-            if button >= 89 and button <= 93:
-                val = button - 88
-                str = "/controller/{}/{}/button/{}".format(self.host, self.dev, val)
-                mqtt.publish(str, int(val))
-                print "{}:\t{}".format(str, int(val))
+            map = {
+                98: "/actuator/bedroom/ceiling_light",
+                89: "/actuator/bedroom/bed_light",
+                90: "/actuator/bedroom/desk_light",
+                85: "/actuator/bedroom/desk_fan",
+                84: "/actuator/bedroom/tower_fan",
+                43: "/actuator/bedroom/desk_monitor",
+                91: "/actuator/bedroom/limpet_light"
+            }
+
+            try:
+                val = "toggle" #'1' if state else '0'
+                topic = map[button]
+                mqtt.publish(topic, val)
+                print "{}:\t{}".format(topic, val)
+
+            except KeyError:
+                print button
+                pass
 
 
 def thread_device (dev):
