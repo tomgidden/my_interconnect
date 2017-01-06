@@ -5,6 +5,7 @@ mqtt_host = 'mqtt.home'
 
 import paho.mqtt.client as mqtt
 
+import signal
 import re
 import sys
 import os
@@ -16,15 +17,25 @@ import socket
 import threading
 
 
-class shuttleProxy(object):
+class shuttleProxy(threading.Thread):
 
     def __init__(self, mqtt=None):
+        super(shuttleProxy, self).__init__()
         self.mqtt = mqtt
         self.states = {}
 
+    def run(self):
         self.mqtt.on_message = self.onMessage
+        self.mqtt.on_disconnect = self.onDisconnect
         self.mqtt.subscribe([('/actuator/bedroom/+',0)])
         self.mqtt.loop_forever()
+
+    def onDisconnect(self, client, userdata, rc):
+        print "Disconnected from MQTT server with code: %s" % rc
+        while rc != 0:
+            time.sleep(1)
+            rc = self.mqtt.reconnect()
+        print "Reconnected to MQTT server."
 
     def onMessage (self, mqtt, obj, msg):
         print "{}:\t{}".format(msg.topic, msg.payload)
@@ -71,18 +82,38 @@ class shuttleProxy(object):
 
 if __name__ == '__main__':
 
-    while True:
-        try:
-            client = mqtt.Client()
-            client.connect(mqtt_host, 1883, 60)
+    try:
+        # For some reason, systemd passes HUP to the job when starting, so we
+        # have to ignore HUP.  Then it has trouble with INT, so best to
+        # explicitly exit on INT, and configure systemd to use INT.
+        def shutdown_handler(signum, frame):
+            print "Setting running to False"
+            shutdown_handler.running = False
 
-            handler = shuttleProxy(mqtt=client)
-            handler.loop()
+        shutdown_handler.running = True
+        signal.signal(signal.SIGINT, shutdown_handler)
 
-        except (KeyboardInterrupt, SystemExit):
-            sys.exit(1)
-
-        except Exception as e:
-            print e
+        # Ignore HUP
+        def ignore_handler(signum, frame):
             pass
+        signal.signal(signal.SIGHUP, ignore_handler)
+
+
+        client = mqtt.Client()
+        client.connect(mqtt_host, 1883, 60)
+
+        handler = shuttleProxy(mqtt=client)
+        handler.daemon = True
+        handler.start()
+
+        while shutdown_handler.running:
+            time.sleep(1)
+        sys.exit(0)
+
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(1)
+
+    except Exception as e:
+        print e
+        pass
 

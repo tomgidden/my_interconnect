@@ -32,8 +32,16 @@ class mqttClient(threading.Thread):
 
     def run(self):
         self.mqtt.on_message = self.onMessage
+        self.mqtt.on_disconnect = self.onDisconnect
         self.mqtt.subscribe([('/actuator/bedroom/ir/#', 0)])
         self.mqtt.loop_forever()
+
+    def onDisconnect(self, client, userdata, rc):
+        print "Disconnected from MQTT server with code: %s" % rc
+        while rc != 0:
+            time.sleep(1)
+            rc = self.mqtt.reconnect()
+        print "Reconnected to MQTT server."
 
     def onMessage (self, mqtt, obj, msg):
         global tah_proxy
