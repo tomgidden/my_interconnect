@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
 mqtt_host = 'mqtt.home'
@@ -15,6 +15,19 @@ from subprocess import call
 import struct
 import socket
 import threading
+
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
+
+mqttlogh = TimedRotatingFileHandler('/nfs/scratch/interconnect.log', when='midnight')
+mqttlogh.setFormatter(logging.Formatter('%(asctime)s\t%(message)s'))
+
+mqttlog = logging.getLogger('interconnect')
+mqttlog.setLevel(logging.INFO)
+mqttlog.addHandler(mqttlogh)
+
+
 
 
 class shuttleProxy(threading.Thread):
@@ -39,32 +52,32 @@ class shuttleProxy(threading.Thread):
 
     def onMessage (self, mqtt, obj, msg):
         print "{}:\t{}".format(msg.topic, msg.payload)
+        mqttlog.info("{}\t{}".format(msg.topic, msg.payload))
 
         map = {
-            '/actuator/bedroom/bed_light':     ('/actuator/bedroom/rf', 1, 2),
-            '/actuator/bedroom/desk_light':    ('/actuator/bedroom/rf', 3, 4),
-            '/actuator/bedroom/desk_fan':      ('/actuator/bedroom/rf', 3, 3),
-            '/actuator/bedroom/tower_fan':     ('/actuator/bedroom/rf', 1, 1),
-            '/actuator/bedroom/desk_monitor':  ('/actuator/bedroom/rf', 3, 2),
-            '/actuator/bedroom/ceiling_light': ('/actuator/bedroom/ir/ceiling_light', None, None),
-            '/actuator/bedroom/limpet_light':  ('/actuator/bedroom/ir/limpet_light', None, None)
+            '/actuator/bedroom/bed_light':     ('/actuator/bedroom/rf', 1, 2, msg.payload),
+            '/actuator/bedroom/desk_light':    ('/actuator/bedroom/rf', 3, 4, msg.payload),
+            '/actuator/bedroom/shelf_light':   ('/actuator/bedroom/rf', 3, 1, msg.payload),
+            '/actuator/bedroom/desk_fan':      ('/actuator/bedroom/rf', 3, 3, msg.payload),
+            '/actuator/bedroom/tower_fan':     ('/actuator/bedroom/rf', 1, 1, msg.payload),
+            '/actuator/bedroom/desk_monitor':  ('/actuator/bedroom/rf', 3, 2, msg.payload),
+            '/actuator/bedroom/ceiling_light': ('/actuator/bedroom/rf', 4, 1, 0),
+            '/actuator/bedroom/limpet_light':  ('/actuator/bedroom/ir/limpet_light', None, None, 'toggle')
         }
 
         try:
-            (ntopic, bank, chan) = map[msg.topic]
+            (ntopic, bank, chan, val) = map[msg.topic]
             # Will have failed if not registered
 
-            if msg.payload == '0':
-                val = '0'
-            elif msg.payload == '1':
-                val = '1'
-            else:
+            if val == 'toggle':
                 bankchan = 'b:{},c:{}'.format(bank,chan)
                 try:
                     self.states[bankchan] = not self.states[bankchan]
                 except:
                     self.states[bankchan] = True
                 val = '1' if self.states[bankchan] else '0'
+
+            val = str(val)
 
             if bank is None:
                 nmsg = val

@@ -20,16 +20,34 @@ try:
     mqtt = paho.Client()
     mqtt.connect(mqtt_host, 1883, 60)
     mqtt.loop_start()
-except e:
+except Exception as e:
     print "MQTT error: "+str(e)
     pass
 
 #device = '/dev/'
 
 hidraw_path = '/sys/class/hidraw'
+unknown_actuator_topic = '/actuator/bedroom/keypad/unknown'
 
 import time
 import struct
+
+class MyRepeats (object):
+    def __init__ (self):
+        self.repeats = {}
+
+    def add (self, topic, val):
+        self.repeats[topic] = val
+
+    def remove (self, topic):
+        self.repeats.pop(topic, None)
+
+    def process (self):
+        for topic, val in self.repeats.iteritems():
+            mqtt.publish(topic, val)
+            print "{}:\t{}".format(topic, val)
+
+repeats = MyRepeats()
 
 class MyKeypad (object):
 
@@ -38,6 +56,28 @@ class MyKeypad (object):
         self.dev = dev
         self.device = fn
         self.state = []
+        self.map = {
+                40: ("/actuator/bedroom/unknown/enter", "toggle", False), # Enter
+                42: ("/actuator/bedroom/unknown/back", "toggle", False), # BACK
+                43: ("/actuator/bedroom/desk_monitor", "toggle", False),
+                84: ("/actuator/bedroom/tower_fan", "toggle", False),
+                85: ("/actuator/bedroom/desk_fan", "toggle", False),
+                86: ("/actuator/bedroom/blind2/direction", -10, True), # -
+                87: ("/actuator/bedroom/blind2/direction", +10, True), # +
+                89: ("/actuator/bedroom/bed_light", "toggle", False), # 1
+                90: ("/actuator/bedroom/desk_light", "toggle", False), # 2
+                91: ("/actuator/bedroom/shelf_light", "toggle", False), # 3
+#                91: ("/actuator/bedroom/limpet_light", "toggle", False), # 3
+                92: ("/actuator/bedroom/blind1/direction", 7, False), # 4
+#                93: ("/actuator/bedroom/unknown/5", "toggle", False), # 5
+                93: ("/actuator/bedroom/medicine_reset", "toggle", False), # 5
+                94: ("/actuator/bedroom/unknown/6", "toggle", False), # 6
+                95: ("/actuator/bedroom/blind1/direction", -7, False), # 7
+                96: ("/actuator/bedroom/oramorph_dose", 10, False), # 8
+                97: ("/actuator/bedroom/unknown/9", "toggle", False), # 9
+                98: ("/actuator/bedroom/ceiling_light", "toggle", False), # 0
+                99: ("/actuator/bedroom/unknown/dot", "toggle", False) # .
+        }
 
     def poll (self):
 
@@ -60,39 +100,31 @@ class MyKeypad (object):
         oldState = list(self.state)
         self.state = []
 
-        for x in bytes:
-            if x == 0: continue
-
-            self.state.append(x)
-
-            if x not in oldState:
-                self.onButton(x, True)
-
-        for x in oldState:
-            if x not in self.state:
-                self.onButton(x, False)
-
-    def onButton (self, button, state):
-        if state:
-            map = {
-                98: "/actuator/bedroom/ceiling_light",
-                89: "/actuator/bedroom/bed_light",
-                90: "/actuator/bedroom/desk_light",
-                85: "/actuator/bedroom/desk_fan",
-                84: "/actuator/bedroom/tower_fan",
-                43: "/actuator/bedroom/desk_monitor",
-                91: "/actuator/bedroom/limpet_light"
-            }
+        for button in bytes:
+            if button == 0: continue
 
             try:
-                val = "toggle" #'1' if state else '0'
-                topic = map[button]
-                mqtt.publish(topic, val)
-                print "{}:\t{}".format(topic, val)
+                topic, val, repeat = self.map[button]
+
+                self.state.append(button)
+                if button not in oldState:
+                    mqtt.publish(topic, val)
+                    print "{}:\t{}".format(topic, val)
+                    if repeat:
+                        repeats.add(topic, val)
 
             except KeyError:
+                mqtt.publish(unknown_actuator_topic, button)
                 print button
                 pass
+
+        for button in oldState:
+            if button not in self.state:
+                try:
+                    topic, val, repeat = self.map[button]
+                    repeats.remove(topic)
+                except KeyError:
+                    pass
 
 
 def thread_device (dev):
@@ -123,7 +155,8 @@ if __name__ == '__main__':
             daemons[dev].start()
 
         while True:
-            time.sleep(5)
+            repeats.process()
+            time.sleep(0.2)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
