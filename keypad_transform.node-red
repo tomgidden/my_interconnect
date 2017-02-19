@@ -1,0 +1,812 @@
+[
+    {
+        "id": "28f5d18c.c6a99e",
+        "type": "tab",
+        "label": "Flow 2"
+    },
+    {
+        "id": "b9ffff3e.dd29c",
+        "type": "mqtt in",
+        "z": "28f5d18c.c6a99e",
+        "name": "Raw keypad",
+        "topic": "/actuator/bedroom/keypad/#",
+        "qos": "2",
+        "broker": "cc4a6967.db7448",
+        "x": 90,
+        "y": 500,
+        "wires": [
+            [
+                "cbf861da.8dc87",
+                "fa074a15.cac8a8"
+            ]
+        ]
+    },
+    {
+        "id": "cbf861da.8dc87",
+        "type": "debug",
+        "z": "28f5d18c.c6a99e",
+        "name": "",
+        "active": false,
+        "console": "false",
+        "complete": "true",
+        "x": 310,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "42728ff4.2e5b4",
+        "type": "switch",
+        "z": "28f5d18c.c6a99e",
+        "name": "Decide action",
+        "property": "payload['key']",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "2",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "3",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "4",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "6",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "7",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "8",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "9",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": ".",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "enter",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "+",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "-",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "backspace",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "*",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "/",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "numlock",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 18,
+        "x": 560,
+        "y": 500,
+        "wires": [
+            [
+                "e3538c19.464e"
+            ],
+            [
+                "9101044d.f73b58"
+            ],
+            [
+                "c1bb6d2c.5d2b2"
+            ],
+            [
+                "a062d2dd.40646"
+            ],
+            [
+                "15815a8d.4466f5"
+            ],
+            [],
+            [
+                "fd88e92f.c98308"
+            ],
+            [
+                "89ce06bb.8e7ba8"
+            ],
+            [],
+            [
+                "36245dfd.0fab12"
+            ],
+            [],
+            [],
+            [
+                "c9e455f6.586308"
+            ],
+            [
+                "71718a09.d3d4a4"
+            ],
+            [],
+            [
+                "325a745.69c298c"
+            ],
+            [
+                "7f9aec0d.5e9b84"
+            ],
+            [
+                "3300c895.a49698"
+            ]
+        ]
+    },
+    {
+        "id": "36245dfd.0fab12",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "ceiling_light",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/ceiling_light",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 500,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "e3538c19.464e",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "bed_light",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/bed_light",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 140,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8",
+                "3e8772b.d1a4f8e"
+            ]
+        ]
+    },
+    {
+        "id": "9101044d.f73b58",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "desk_light",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/desk_light",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 180,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "c1bb6d2c.5d2b2",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "shelf_light",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/shelf_light",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 220,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "a062d2dd.40646",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "blind1 up",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/blind1/direction",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "7",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 260,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "15815a8d.4466f5",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "medicine reset",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/medicine_reset",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 840,
+        "y": 300,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "fd88e92f.c98308",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "blind1 down",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/blind1/direction",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "-7",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 380,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "89ce06bb.8e7ba8",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "oramorph dose 10mg",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/oramorph_dose",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "10",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 860,
+        "y": 420,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "c9e455f6.586308",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "blind2 up",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/blind2/direction",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "10",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 880,
+        "wires": [
+            [
+                "ad6f6a53.c5dcd8"
+            ]
+        ]
+    },
+    {
+        "id": "71718a09.d3d4a4",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "blind2 down",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/blind2/direction",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "-10",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 920,
+        "wires": [
+            [
+                "ad6f6a53.c5dcd8"
+            ]
+        ]
+    },
+    {
+        "id": "325a745.69c298c",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "desk fan",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/desk_fan",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 600,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "7f9aec0d.5e9b84",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "tower fan",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/tower_fan",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 640,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "3300c895.a49698",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "desk monitor",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "/actuator/bedroom/desk_monitor",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.value",
+                "pt": "msg",
+                "to": "toggle",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 680,
+        "wires": [
+            [
+                "b7b4a7f7.8fc6a8"
+            ]
+        ]
+    },
+    {
+        "id": "b7b4a7f7.8fc6a8",
+        "type": "switch",
+        "z": "28f5d18c.c6a99e",
+        "name": "State (down/up/repeat)",
+        "property": "payload.state",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "down",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "up",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "repeat",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 3,
+        "x": 1210,
+        "y": 420,
+        "wires": [
+            [
+                "588d3a87.4c6874"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ad6f6a53.c5dcd8",
+        "type": "switch",
+        "z": "28f5d18c.c6a99e",
+        "name": "State (down/up/repeat)",
+        "property": "payload.state",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "down",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "up",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "repeat",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 3,
+        "x": 1210,
+        "y": 900,
+        "wires": [
+            [
+                "588d3a87.4c6874"
+            ],
+            [],
+            [
+                "588d3a87.4c6874"
+            ]
+        ]
+    },
+    {
+        "id": "b8ec3b7d.474a58",
+        "type": "debug",
+        "z": "28f5d18c.c6a99e",
+        "name": "",
+        "active": false,
+        "console": "false",
+        "complete": "true",
+        "x": 1830,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "fa074a15.cac8a8",
+        "type": "json",
+        "z": "28f5d18c.c6a99e",
+        "name": "Payload decode JSON",
+        "x": 320,
+        "y": 500,
+        "wires": [
+            [
+                "42728ff4.2e5b4",
+                "6e69d5a2.f65fdc"
+            ]
+        ]
+    },
+    {
+        "id": "6e69d5a2.f65fdc",
+        "type": "debug",
+        "z": "28f5d18c.c6a99e",
+        "name": "",
+        "active": false,
+        "console": "false",
+        "complete": "false",
+        "x": 530,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "3e8772b.d1a4f8e",
+        "type": "debug",
+        "z": "28f5d18c.c6a99e",
+        "name": "",
+        "active": false,
+        "console": "false",
+        "complete": "false",
+        "x": 1160,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "588d3a87.4c6874",
+        "type": "change",
+        "z": "28f5d18c.c6a99e",
+        "name": "Shrink payload to value",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.value",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1550,
+        "y": 640,
+        "wires": [
+            [
+                "b8ec3b7d.474a58",
+                "ede846af.0ec918"
+            ]
+        ]
+    },
+    {
+        "id": "ede846af.0ec918",
+        "type": "mqtt out",
+        "z": "28f5d18c.c6a99e",
+        "name": "",
+        "topic": "",
+        "qos": "2",
+        "retain": "false",
+        "broker": "cc4a6967.db7448",
+        "x": 1830,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "cc4a6967.db7448",
+        "type": "mqtt-broker",
+        "z": "",
+        "broker": "mqtt.home",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": ""
+    }
+]

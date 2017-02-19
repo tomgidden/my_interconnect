@@ -15,6 +15,7 @@ import struct
 import socket
 import threading
 import fcntl
+import json
 
 try:
     mqtt = paho.Client()
@@ -27,7 +28,30 @@ except Exception as e:
 #device = '/dev/'
 
 hidraw_path = '/sys/class/hidraw'
-unknown_actuator_topic = '/actuator/bedroom/keypad/unknown'
+keypad_actuator_topic = '/actuator/bedroom/keypad'
+
+keycode_map = {
+    40: "enter",
+    88: "enter",
+    42: "backspace",
+    43: "numlock",
+    83: "numlock",
+    84: "/",
+    85: "*",
+    86: "-",
+    87: "+",
+    89: "1",
+    90: "2",
+    91: "3",
+    92: "4",
+    93: "5",
+    94: "6",
+    95: "7",
+    96: "8",
+    97: "9",
+    98: "0",
+    99: "."
+}
 
 import time
 import struct
@@ -35,52 +59,45 @@ import struct
 class MyRepeats (object):
     def __init__ (self):
         self.repeats = {}
+        self.delay = {}
 
     def add (self, topic, val):
+        self.delay[topic] = val
         self.repeats[topic] = val
 
     def remove (self, topic):
+        self.delay.pop(topic, None)
         self.repeats.pop(topic, None)
 
     def process (self):
         for topic, val in self.repeats.iteritems():
-            mqtt.publish(topic, val)
-            print "{}:\t{}".format(topic, val)
+            if topic in self.delay:
+                self.delay.pop(topic, None)
+            else:
+                mqtt.publish(topic, val)
 
 repeats = MyRepeats()
 
 class MyKeypad (object):
 
-    def __init__(self, fn, host, dev):
+    def __init__(self, fn, host, dev, type):
+        self.type = type
         self.host = host
         self.dev = dev
         self.device = fn
         self.state = []
-        self.map = {
-                40: ("/actuator/bedroom/unknown/enter", "toggle", False), # Enter
-                42: ("/actuator/bedroom/unknown/back", "toggle", False), # BACK
-                43: ("/actuator/bedroom/desk_monitor", "toggle", False),
-                84: ("/actuator/bedroom/tower_fan", "toggle", False),
-                85: ("/actuator/bedroom/desk_fan", "toggle", False),
-                86: ("/actuator/bedroom/blind2/direction", -10, True), # -
-                87: ("/actuator/bedroom/blind2/direction", +10, True), # +
-                89: ("/actuator/bedroom/bed_light", "toggle", False), # 1
-                90: ("/actuator/bedroom/desk_light", "toggle", False), # 2
-                91: ("/actuator/bedroom/shelf_light", "toggle", False), # 3
-#                91: ("/actuator/bedroom/limpet_light", "toggle", False), # 3
-                92: ("/actuator/bedroom/blind1/direction", 7, False), # 4
-#                93: ("/actuator/bedroom/unknown/5", "toggle", False), # 5
-                93: ("/actuator/bedroom/medicine_reset", "toggle", False), # 5
-                94: ("/actuator/bedroom/unknown/6", "toggle", False), # 6
-                95: ("/actuator/bedroom/blind1/direction", -7, False), # 7
-                96: ("/actuator/bedroom/oramorph_dose", 10, False), # 8
-                97: ("/actuator/bedroom/unknown/9", "toggle", False), # 9
-                98: ("/actuator/bedroom/ceiling_light", "toggle", False), # 0
-                99: ("/actuator/bedroom/unknown/dot", "toggle", False) # .
+        self.keycode_map = keycode_map
+        self.topic = keypad_actuator_topic
+        self.msg = {
+            'state': None,
+            'type': type,
+            'host': host,
+            'dev': dev,
+            'keycode': None,
+            'key': None
         }
 
     def poll (self):
-
         try:
             with open(self.device, 'r') as f:
                 buf = f.read(8)
@@ -93,8 +110,7 @@ class MyKeypad (object):
             pass
 
     def process (self, bytes) :
-
-        if 83 in bytes:
+        if self.type == 'wired' and 83 in bytes:
             return
 
         oldState = list(self.state)
@@ -103,33 +119,29 @@ class MyKeypad (object):
         for button in bytes:
             if button == 0: continue
 
+            self.msg['keycode'] = button
             try:
-                topic, val, repeat = self.map[button]
+                self.msg['key'] = self.keycode_map[button]
+            except:
+                self.msg['key'] = None
 
-                self.state.append(button)
-                if button not in oldState:
-                    mqtt.publish(topic, val)
-                    print "{}:\t{}".format(topic, val)
-                    if repeat:
-                        repeats.add(topic, val)
+            if button not in oldState:
+                self.msg['state'] = 'down'
+                mqtt.publish(self.topic+'/down', json.dumps(self.msg))
+                self.msg['state'] = 'repeat'
+                repeats.add(self.topic+'/repeat', json.dumps(self.msg))
 
-            except KeyError:
-                mqtt.publish(unknown_actuator_topic, button)
-                print button
-                pass
+            self.state.append(button)
 
         for button in oldState:
             if button not in self.state:
-                try:
-                    topic, val, repeat = self.map[button]
-                    repeats.remove(topic)
-                except KeyError:
-                    pass
+                self.msg['state'] = 'up'
+                mqtt.publish(self.topic+'/up', json.dumps(self.msg))
+                repeats.remove(self.topic+'/repeat')
 
-
-def thread_device (dev):
+def thread_device (dev, type):
     fn = "/dev/"+dev
-    keypad = MyKeypad(fn, platform.node(), dev)
+    keypad = MyKeypad(fn, platform.node(), dev, type)
 
     while True:
         try:
@@ -140,23 +152,28 @@ def thread_device (dev):
                 time.sleep(60)
         except (KeyboardInterrupt, SystemExit):
             sys.exit(1)
-        print "Failure"
+    print "Failure"
 
 if __name__ == '__main__':
 
-    devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
-
-    daemons = {}
-
     try:
+        daemons = {}
+
+        devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
         for dev in devs:
-            daemons[dev] = threading.Thread(target=thread_device, args=(dev,))
-            daemons[dev].daemon = True
-            daemons[dev].start()
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
+
+        devs = [f for f in os.listdir(hidraw_path) if "062A:4182" in os.path.realpath(hidraw_path + '/' + f)]
+        for dev in devs:
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
+
+        for dev, daemon in daemons.iteritems():
+            daemon.daemon = True
+            daemon.start()
 
         while True:
+            time.sleep(0.25)
             repeats.process()
-            time.sleep(0.2)
 
     except (KeyboardInterrupt, SystemExit):
         sys.exit(1)
