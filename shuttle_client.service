@@ -1,9 +1,9 @@
 [Unit]
 Description=GidTech ShuttleXpress client handler
-After=network-online.target
+After=network-online.target autofs.service
 
 [Service]
-ExecStart=/root/interconnect/run_client.zsh
+ExecStart=/root/interconnect/run_shuttle.zsh
 WorkingDirectory=/root/interconnect
 User=root
 Group=daemon

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 mqtt_host = 'mqtt.home'
@@ -8,7 +8,7 @@ import paho.mqtt.client as paho
 import platform
 import sys
 import os
-import urllib2
+#import urllib2
 import time
 from subprocess import call
 import struct
@@ -22,7 +22,7 @@ try:
     mqtt.connect(mqtt_host, 1883, 60)
     mqtt.loop_start()
 except Exception as e:
-    print "MQTT error: "+str(e)
+    print ("MQTT error: "+str(e))
     pass
 
 #device = '/dev/'
@@ -70,7 +70,7 @@ class MyRepeats (object):
         self.repeats.pop(topic, None)
 
     def process (self):
-        for topic, val in self.repeats.iteritems():
+        for topic, val in self.repeats.items():
             if topic in self.delay:
                 self.delay.pop(topic, None)
             else:
@@ -125,6 +125,8 @@ class MyKeypad (object):
             except:
                 self.msg['key'] = None
 
+            print (self.msg['key'])
+
             if button not in oldState:
                 self.msg['state'] = 'down'
                 mqtt.publish(self.topic+'/down', json.dumps(self.msg))
@@ -152,7 +154,7 @@ def thread_device (dev, type):
                 time.sleep(60)
         except (KeyboardInterrupt, SystemExit):
             sys.exit(1)
-    print "Failure"
+    print ("Failure")
 
 if __name__ == '__main__':
 
@@ -167,7 +169,7 @@ if __name__ == '__main__':
         for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 
-        for dev, daemon in daemons.iteritems():
+        for dev, daemon in daemons.items():
             daemon.daemon = True
             daemon.start()
 

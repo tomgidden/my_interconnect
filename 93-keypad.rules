@@ -1,0 +1,2 @@
+# Copy to /etc/udev/rules.d
+ACTION=="add", SUBSYSTEM=="input", RUN+="/bin/systemctl restart keypad_client"

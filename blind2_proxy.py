@@ -48,7 +48,14 @@ class mqttClient(threading.Thread):
 
         if msg.topic.endswith("/direction"):
             speed = 255 if int(msg.payload) > 0 else -255
-            serial_proxy.write_line('S{}+10'.format(speed))
+            serial_proxy.send_move(speed, '+10')
+
+        elif msg.topic.endswith("/target"):
+            target = int(msg.payload)
+            serial_proxy.send_target(255, target)
+
+        elif msg.topic.endswith("/reset"):
+            serial_proxy.send_reset()
 
 class serialProxy(serial.threaded.LineReader):
     TERMINATOR = b'\n'
@@ -59,16 +66,51 @@ class serialProxy(serial.threaded.LineReader):
         super(serialProxy, self).__init__()
         global serial_proxy
         serial_proxy = self
+        self.pos = None
 
     def handle_packet(self, packet):
         self.handle_line(packet.decode(self.ENCODING, self.UNICODE_HANDLING))
 
+    def send_move(self, speed, distance):
+        speed = int(speed)
+        speed = '+{}'.format(speed) if speed > 0 else speed
+
+        distance = int(distance)
+        distance = '+{}'.format(distance) if distance > 0 else distance
+
+        self.write_line('S{}{}'.format(speed, distance))
+
+    def send_reset(self):
+        self.write_line('Z')
+
+    def send_target(self, speed, target):
+        speed = int(speed)
+        target = int(target)
+
+        if self.pos is None:
+            speed = 1 if speed >= 0 else -1
+        else:
+            if self.pos < target and speed < 0: speed = -speed
+            if self.pos > target and speed > 0: speed = -speed
+
+            if   self.pos > target and self.pos - target < 20:  speed = speed / 2
+            elif self.pos < target and self.pos - target > -20: speed = speed / 2
+
+        speed = '+{}'.format(speed) if speed >= 0 else speed
+        target = '+{}'.format(target) if target >= 0 else target
+
+        print 'T{}{}'.format(speed, target)
+        self.write_line('T{}{}'.format(speed, target))
+
     def handle_line (self, line):
         global mqtt_client
 
-        print "RX: {}".format(line)
-
-        mqtt_client.mqtt.publish("/actuator/bedroom/blind2", line)
+        if line[0] == 'R':
+            mqtt_client.mqtt.publish("/actuator/bedroom/blind2/position", payload=line[1:], retain=True)
+            self.pos = int(line[1:])
+            print "Set pos to {}".format(self.pos)
+        else:
+            mqtt_client.mqtt.publish("/actuator/bedroom/blind2/output", payload=line, retain=False)
 
 if __name__ == '__main__':
 
