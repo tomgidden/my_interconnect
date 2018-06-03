@@ -7,4 +7,4 @@ rsync --delete -a /nfs/miniprojects/interconnect/ /root/interconnect
 
 cd /root/interconnect
 
-exec ./keypad_client.py
+exec python3 ./keypad_client.py
