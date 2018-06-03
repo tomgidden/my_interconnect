@@ -99,7 +99,7 @@ class MyKeypad (object):
 
     def poll (self):
         try:
-            with open(self.device, 'r') as f:
+            with open(self.device, 'rb') as f:
                 buf = f.read(8)
                 while buf:
                     bytes = struct.unpack('B'*len(buf), buf)
@@ -110,6 +110,28 @@ class MyKeypad (object):
             pass
 
     def process (self, bytes) :
+
+        if self.type == 'presenter':
+            if bytes[0] != 1 or bytes[3] != 0 or bytes[4] != 1:
+                return
+
+            if (bytes[1]==2 and bytes[2]==62):
+                self.msg['key'] = 'south'
+            elif (bytes[1]==0 and bytes[2]==41):
+                self.msg['key'] = 'south'
+            elif (bytes[1]==0 and bytes[2]==5):
+                self.msg['key'] = 'north'
+            elif (bytes[1]==0 and bytes[2]==75):
+                self.msg['key'] = 'west'
+            elif (bytes[1]==0 and bytes[2]==78):
+                self.msg['key'] = 'east'
+            else:
+                return
+            self.msg['keycode'] = bytes[2]
+            self.msg['state'] = 'up'
+            mqtt.publish(self.topic+'/up', json.dumps(self.msg))
+            return
+
         if self.type == 'wired' and 83 in bytes:
             return
 
@@ -168,6 +190,10 @@ if __name__ == '__main__':
         devs = [f for f in os.listdir(hidraw_path) if "062A:4182" in os.path.realpath(hidraw_path + '/' + f)]
         for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
+
+        devs = [f for f in os.listdir(hidraw_path) if "2571:4101" in os.path.realpath(hidraw_path + '/' + f)]
+        for dev in devs:
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
 
         for dev, daemon in daemons.items():
             daemon.daemon = True
