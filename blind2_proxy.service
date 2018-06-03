@@ -3,7 +3,8 @@ Description=GidTech Window-Blackout-O-Matic 2000 (blind2) handler
 After=network-online.target autofs.service
 
 [Service]
-ExecStart=/root/interconnect/run_blind2.zsh
+ExecStartPre=rsync --delete -a /nfs/miniprojects/interconnect/*blind* /root/interconnect
+ExecStart=/root/interconnect/blind2_proxy.py
 WorkingDirectory=/root/interconnect
 User=root
 Group=daemon
