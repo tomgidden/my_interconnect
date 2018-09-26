@@ -15,6 +15,7 @@ import signal
 import time
 
 serial_dev = '/dev/ttyUSB'
+topic_prefix = '/actuator/bedroom/blind2'
 
 mqtt = paho.Client()
 mqtt.connect(mqtt_host, 1883, 60)
@@ -30,16 +31,21 @@ class mqttClient(threading.Thread):
     def run(self):
         self.mqtt.on_message = self.onMessage
         self.mqtt.on_disconnect = self.onDisconnect
-        self.mqtt.subscribe([('/actuator/bedroom/blind2/#', 0)])
-        self.mqtt.loop_forever()
+        self.mqtt.subscribe([(topic_prefix+'/#', 0)])
+        try:
+            self.mqtt.loop_forever()
+        except Exception as e:
+            print e
+            sys.exit(123)
 
     def onDisconnect(self, client, userdata, rc):
         print "Disconnected from MQTT server with code: %s" % rc
         while rc != 0:
             try:
                 rc = self.mqtt.reconnect()
-            except:
-                time.sleep(1)
+            except Exception as e:
+                print e
+                sys.exit(124)
         print "Reconnected to MQTT server."
 
     def onMessage (self, mqtt, obj, msg):
@@ -106,11 +112,10 @@ class serialProxy(serial.threaded.LineReader):
         global mqtt_client
 
         if line[0] == 'R':
-            mqtt_client.mqtt.publish("/actuator/bedroom/blind2/position", payload=line[1:], retain=True)
             self.pos = int(line[1:])
             print "Set pos to {}".format(self.pos)
         else:
-            mqtt_client.mqtt.publish("/actuator/bedroom/blind2/output", payload=line, retain=False)
+            mqtt_client.mqtt.publish(topic_prefix+"/output", payload=line, retain=False)
 
 if __name__ == '__main__':
 
@@ -135,7 +140,9 @@ if __name__ == '__main__':
 
             # Find Arduino Nano fake
             dev = [port.device for port in serial.tools.list_ports.comports() if port.vid==0x1a86 and port.pid==0x7523]
+            print ("Got dev "+str(dev))
             ser = serial.serial_for_url(dev[0], baudrate=115200)
+            print ("Got serial port")
             t = serial.threaded.ReaderThread(ser, serialProxy)
             t.start()
 
@@ -144,16 +151,18 @@ if __name__ == '__main__':
             mqtt_client.start()
 
             while shutdown_handler.running:
-                time.sleep(1)
-            sys.exit(0)
+                mqtt_client.mqtt.publish(topic_prefix+"/watchdog", payload='ping', retain=False)
+                time.sleep(5)
+
+            raise SystemExit()
 
         except (KeyboardInterrupt, SystemExit) as e:
-            print e
+            mqtt_client.mqtt.publish(topic_prefix+"/exit", payload=str(e), retain=False)
             sys.exit(0)
 
-    #    except OSError as e:
-    #        t.reconnect()
-
         except Exception as e:
-            print e
-            sys.exit(1)
+            print (e)
+            try:    mqtt_client.mqtt.publish(topic_prefix+"/error", payload=str(e), retain=False)
+            except: pass
+            time.sleep(5)
+            sys.exit(125)
