@@ -1,0 +1,17 @@
+[Unit]
+Description=GidTech campi Presenter handler
+After=network-online.target autofs.service
+
+[Service]
+ExecStart=/root/interconnect/run_campi_controller.zsh
+WorkingDirectory=/root/interconnect
+User=root
+Group=daemon
+SyslogIdentifier=campi_controller
+StandardOutput=syslog
+Restart=on-failure
+KillSignal=SIGINT
+#Nice=10
+
+[Install]
+WantedBy=multi-user.target
