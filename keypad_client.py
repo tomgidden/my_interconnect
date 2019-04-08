@@ -18,7 +18,7 @@ import fcntl
 import json
 
 try:
-    mqtt = paho.Client()
+    mqtt = paho.Client(client_id=socket.gethostname()+'.keypad_client')
     mqtt.connect(mqtt_host, 1883, 60)
     mqtt.loop_start()
 except Exception as e:
@@ -185,14 +185,17 @@ if __name__ == '__main__':
 
         devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
         for dev in devs:
+            print (dev, 'wired')
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
 
         devs = [f for f in os.listdir(hidraw_path) if "062A:4182" in os.path.realpath(hidraw_path + '/' + f)]
         for dev in devs:
+            print (dev, 'wireless')
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 
         devs = [f for f in os.listdir(hidraw_path) if "2571:4101" in os.path.realpath(hidraw_path + '/' + f)]
         for dev in devs:
+            print (dev, 'presenter')
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
 
         for dev, daemon in daemons.items():

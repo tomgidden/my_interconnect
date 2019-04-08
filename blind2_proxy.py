@@ -5,6 +5,7 @@ mqtt_host = 'mqtt.home'
 import sys
 import paho.mqtt.client as paho
 import os
+import socket
 import datetime
 import threading
 import serial
@@ -17,7 +18,7 @@ import time
 serial_dev = '/dev/ttyUSB'
 topic_prefix = '/actuator/bedroom/blind2'
 
-mqtt = paho.Client()
+mqtt = paho.Client(client_id=socket.gethostname()+'.blind2_proxy')
 mqtt.connect(mqtt_host, 1883, 60)
 
 exiting = False
