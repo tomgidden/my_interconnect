@@ -1,6 +1,6 @@
 [Unit]
 Description=GidTech Keypad client handler
-After=network-online.target autofs.service
+After=network-online.target
 
 [Service]
 ExecStart=/root/interconnect/run_keypad.zsh

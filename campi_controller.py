@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-mqtt_host = '192.168.7.2'
+mqtt_host = 'mqtt.home'
 
 import paho.mqtt.client as paho
 

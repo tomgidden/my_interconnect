@@ -13,6 +13,7 @@ import time
 from subprocess import call
 import struct
 import socket
+import select
 import threading
 import fcntl
 import json
@@ -80,11 +81,10 @@ repeats = MyRepeats()
 
 class MyKeypad (object):
 
-    def __init__(self, fn, host, dev, type):
+    def __init__(self, fn, host, type):
         self.type = type
         self.host = host
-        self.dev = dev
-        self.device = fn
+        self.fn = fn
         self.state = []
         self.keycode_map = keycode_map
         self.topic = keypad_actuator_topic
@@ -92,22 +92,29 @@ class MyKeypad (object):
             'state': None,
             'type': type,
             'host': host,
-            'dev': dev,
+            'dev': str(fn),
             'keycode': None,
             'key': None
         }
 
+
     def poll (self):
-        try:
-            with open(self.device, 'rb') as f:
-                buf = f.read(8)
-                while buf:
+        while True:
+            try:
+                poll = select.poll()
+                f = os.open(self.fn, os.O_RDONLY)
+
+                os.set_blocking(f, False)
+                poll.register(f)
+
+                for fd,ev in poll.poll():
+                    buf = os.read(f, 16)
                     bytes = struct.unpack('B'*len(buf), buf)
                     self.process(list(bytes))
-                    buf = f.read(8)
 
-        except IOError:
-            pass
+            except Error as e:
+                raise e
+
 
     def process (self, bytes) :
 
@@ -140,6 +147,7 @@ class MyKeypad (object):
 
         for button in bytes:
             if button == 0: continue
+            if button == 1: continue
 
             self.msg['keycode'] = button
             try:
@@ -147,11 +155,11 @@ class MyKeypad (object):
             except:
                 self.msg['key'] = None
 
-            print (self.msg['key'])
-
             if button not in oldState:
                 self.msg['state'] = 'down'
                 mqtt.publish(self.topic+'/down', json.dumps(self.msg))
+                print ("{}\t{}".format(self.topic+'/down', json.dumps(self.msg)))
+
                 self.msg['state'] = 'repeat'
                 repeats.add(self.topic+'/repeat', json.dumps(self.msg))
 
@@ -161,19 +169,18 @@ class MyKeypad (object):
             if button not in self.state:
                 self.msg['state'] = 'up'
                 mqtt.publish(self.topic+'/up', json.dumps(self.msg))
+                print ("{}\t{}".format(self.topic+'/up', json.dumps(self.msg)))
+
                 repeats.remove(self.topic+'/repeat')
 
-def thread_device (dev, type):
-    fn = "/dev/"+dev
-    keypad = MyKeypad(fn, platform.node(), dev, type)
+
+def thread_device (hid, type):
+    keypad = MyKeypad(hid, platform.node(), type)
 
     while True:
         try:
             keypad.poll()
-            if os.path.exists(fn):
-                time.sleep(5)
-            else:
-                time.sleep(60)
+            time.sleep(5)
         except (KeyboardInterrupt, SystemExit):
             sys.exit(1)
     print ("Failure")
@@ -182,21 +189,43 @@ if __name__ == '__main__':
 
     try:
         daemons = {}
+        hids = hid.enumerate()
 
-        devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x7021 and f['vendor_id'] == 0x04e8]
         for dev in devs:
-            print (dev, 'wired')
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
+
+        devs = [f['path'] for f in hids if f['product_id'] == 0x05a4 and f['vendor_id'] == 0x9840]
+        for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
 
-        devs = [f for f in os.listdir(hidraw_path) if "062A:4182" in os.path.realpath(hidraw_path + '/' + f)]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
         for dev in devs:
-            print (dev, 'wireless')
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 
-        devs = [f for f in os.listdir(hidraw_path) if "2571:4101" in os.path.realpath(hidraw_path + '/' + f)]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x4101 and f['vendor_id'] == 0x2571]
         for dev in devs:
-            print (dev, 'presenter')
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
+
+#        devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
+#        for dev in devs:
+#            print (dev, 'wired')
+#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
+
+        # devs = [f for f in os.listdir(hidraw_path) if "062A:4182" in os.path.realpath(hidraw_path + '/' + f)]
+        # for dev in devs:
+        #     print (dev, 'wireless')
+        #     daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
+
+        # devs = [f for f in os.listdir(hidraw_path) if "04E8:7021" in os.path.realpath(hidraw_path + '/' + f)]
+        # for dev in devs:
+        #     print (dev, 'bt302')
+        #     daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
+
+#        devs = [f for f in os.listdir(hidraw_path) if "2571:4101" in os.path.realpath(hidraw_path + '/' + f)]
+#        for dev in devs:
+#            print (dev, 'presenter')
+#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
 
         for dev, daemon in daemons.items():
             daemon.daemon = True
