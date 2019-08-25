@@ -9,6 +9,7 @@ import platform
 import sys
 import os
 #import urllib2
+import hid
 import time
 from subprocess import call
 import struct
@@ -101,6 +102,7 @@ class MyKeypad (object):
     def poll (self):
         while True:
             try:
+                print ("Polling "+str(self.fn))
                 poll = select.poll()
                 f = os.open(self.fn, os.O_RDONLY)
 
@@ -112,7 +114,7 @@ class MyKeypad (object):
                     bytes = struct.unpack('B'*len(buf), buf)
                     self.process(list(bytes))
 
-            except Error as e:
+            except IOError as e:
                 raise e
 
 
@@ -190,16 +192,19 @@ if __name__ == '__main__':
     try:
         daemons = {}
         hids = hid.enumerate()
+        for f in hids:
+            print ("{}\tvendor={:04x}\tproduct={:04x}".format(f['path'], f['vendor_id'], f['product_id']))
 
         devs = [f['path'] for f in hids if f['product_id'] == 0x7021 and f['vendor_id'] == 0x04e8]
         for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
 
-        devs = [f['path'] for f in hids if f['product_id'] == 0x05a4 and f['vendor_id'] == 0x9840]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x9840 and f['vendor_id'] == 0x05a4]
         for dev in devs:
+            print (dev)
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
 
-        devs = [f['path'] for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x062a and f['vendor_id'] == 0x4182]
         for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 

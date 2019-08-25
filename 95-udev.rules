@@ -1,0 +1,22 @@
+# Copy to /etc/udev/rules.d
+
+#ACTION=="add", SUBSYSTEM=="input", RUN+="/bin/systemctl restart keypad_client"
+#ACTION=="add", KERNEL=="hidraw*", RUN+="/bin/systemctl restart keypad_client"
+
+SUBSYSTEM=="usb", GROUP="input", MODE="0660"
+KERNEL=="hidraw*", GROUP="input", MODE="0660"
+
+#SUBSYSTEM=="hidraw", ACTION=="add", ATTRS{idVendor}=="0922", ATTRS{idProduct}=="1001", GROUP="plugdev"
+
+#ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="04e8", ATTRS{idProduct}=="7021", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k bt302"
+#ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="05a4", ATTRS{idProduct}=="9840", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k wired"
+#ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="4182", ATTRS{idProduct}=="062a", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k wireless"
+#ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="2571", ATTRS{idProduct}=="4101", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k presenter"
+
+ACTION=="add", KERNELS=="input*", GROUP="input", MODE="0660", RUN+="/bin/systemctl restart keypad_event@%k"
+ACTION=="remove", KERNELS=="input*", GROUP="input", MODE="0660", RUN+="/bin/systemctl stop keypad_event@%k"
+
+
+
+#RUN+="/root/interconnect/keypad_event.py /dev/input/%k"
+#ACTION=="add", KERNELS=="input*", GROUP="input", MODE="0660"

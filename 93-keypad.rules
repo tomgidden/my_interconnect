@@ -1,2 +1,6 @@
 # Copy to /etc/udev/rules.d
 ACTION=="add", SUBSYSTEM=="input", RUN+="/bin/systemctl restart keypad_client"
+ACTION=="add", KERNEL=="hidraw*", RUN+="/bin/systemctl restart keypad_client"
+
+SUBSYSTEM=="usb", GROUP="input", MODE="0660"
+KERNEL=="hidraw*", GROUP="input", MODE="0660"

@@ -1,0 +1,14 @@
+[Unit]
+Description=GidTech Keypad handler for %i
+PartOf=keypad_event.service
+ReloadPropagatedFrom=keypad_event.service
+
+[Service]
+KillMode=mixed
+ExecStart=/root/interconnect/keypad_event.py /dev/input/%i
+WorkingDirectory=/root/interconnect
+
+[Install]
+WantedBy=multi-user.target
+
+

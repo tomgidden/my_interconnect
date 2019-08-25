@@ -1,0 +1,11 @@
+[Unit]
+Description=GidTech Keypad client handler
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+
+[Install]
+WantedBy=multi-user.target
