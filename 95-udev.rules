@@ -13,8 +13,8 @@ KERNEL=="hidraw*", GROUP="input", MODE="0660"
 #ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="4182", ATTRS{idProduct}=="062a", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k wireless"
 #ACTION=="add", KERNEL=="hidraw*", ATTRS{idVendor}=="2571", ATTRS{idProduct}=="4101", GROUP="input", MODE="0660", RUN+="/root/interconnect/keypad_device.py /dev/%k presenter"
 
-ACTION=="add", KERNELS=="input*", GROUP="input", MODE="0660", RUN+="/bin/systemctl restart keypad_event@%k"
-ACTION=="remove", KERNELS=="input*", GROUP="input", MODE="0660", RUN+="/bin/systemctl stop keypad_event@%k"
+ACTION=="add", KERNELS=="hidraw*", GROUP="input", MODE="0660", RUN+="/bin/systemctl restart keypad_client"
+ACTION=="remove", KERNELS=="hidraw*", GROUP="input", MODE="0660", RUN+="/bin/systemctl stop keypad_client"
 
 
 

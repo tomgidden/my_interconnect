@@ -33,26 +33,26 @@ hidraw_path = '/sys/class/hidraw'
 keypad_actuator_topic = '/actuator/bedroom/keypad'
 
 keycode_map = {
-    40: "enter",
-    88: "enter",
-    42: "backspace",
-    43: "numlock",
-    83: "numlock",
-    84: "/",
-    85: "*",
-    86: "-",
-    87: "+",
-    89: "1",
-    90: "2",
-    91: "3",
-    92: "4",
-    93: "5",
-    94: "6",
-    95: "7",
-    96: "8",
-    97: "9",
-    98: "0",
-    99: "."
+    40: "KEY_ENTER",
+    88: "KEY_ENTER",
+    42: "KEY_BACKSPACE",
+    43: "KEY_NUMLOCK",
+    83: "KEY_NUMLOCK",
+    84: "KEY_KPSLASH",
+    85: "KEY_KPASTERISK",
+    86: "KEY_KPMINUS",
+    87: "KEY_KPPLUS",
+    89: "KEY_KP1",
+    90: "KEY_KP2",
+    91: "KEY_KP3",
+    92: "KEY_KP4",
+    93: "KEY_KP5",
+    94: "KEY_KP6",
+    95: "KEY_KP7",
+    96: "KEY_KP8",
+    97: "KEY_KP9",
+    98: "KEY_KP0",
+    99: "KEY_KPDOT"
 }
 
 import time
@@ -204,7 +204,7 @@ if __name__ == '__main__':
             print (dev)
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
 
-        devs = [f['path'] for f in hids if f['product_id'] == 0x062a and f['vendor_id'] == 0x4182]
+        devs = [f['path'] for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
         for dev in devs:
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 

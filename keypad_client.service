@@ -3,7 +3,7 @@ Description=GidTech Keypad client handler
 After=network-online.target
 
 [Service]
-ExecStart=/root/interconnect/run_keypad.zsh
+ExecStart=/root/interconnect/keypad_client.py
 WorkingDirectory=/root/interconnect
 User=root
 Group=daemon
