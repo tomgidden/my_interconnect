@@ -106,7 +106,7 @@ class MyKeypad (object):
                 poll = select.poll()
                 f = os.open(self.fn, os.O_RDONLY)
 
-                os.set_blocking(f, False)
+#                os.set_blocking(f, False)
                 poll.register(f)
 
                 for fd,ev in poll.poll():
@@ -115,6 +115,7 @@ class MyKeypad (object):
                     self.process(list(bytes))
 
             except IOError as e:
+                print (self.fn)
                 raise e
 
 
@@ -197,6 +198,7 @@ if __name__ == '__main__':
 
         devs = [f['path'] for f in hids if f['product_id'] == 0x7021 and f['vendor_id'] == 0x04e8]
         for dev in devs:
+            print (dev)
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
 
         devs = [f['path'] for f in hids if f['product_id'] == 0x9840 and f['vendor_id'] == 0x05a4]
@@ -206,11 +208,17 @@ if __name__ == '__main__':
 
         devs = [f['path'] for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
         for dev in devs:
+            print (dev)
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 
         devs = [f['path'] for f in hids if f['product_id'] == 0x4101 and f['vendor_id'] == 0x2571]
         for dev in devs:
+            print (dev)
             daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
+
+
+
+
 
 #        devs = [f for f in os.listdir(hidraw_path) if "05A4:9840" in os.path.realpath(hidraw_path + '/' + f)]
 #        for dev in devs:
