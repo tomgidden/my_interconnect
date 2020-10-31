@@ -9,7 +9,6 @@ import platform
 import sys
 import os
 #import urllib2
-import glob
 import hid
 import time
 from subprocess import call
@@ -83,10 +82,10 @@ repeats = MyRepeats()
 
 class MyKeypad (object):
 
-    def __init__(self, dev, host, type):
+    def __init__(self, fn, host, type):
         self.type = type
         self.host = host
-        self.dev = dev
+        self.fn = fn
         self.state = []
         self.keycode_map = keycode_map
         self.topic = keypad_actuator_topic
@@ -94,7 +93,7 @@ class MyKeypad (object):
             'state': None,
             'type': type,
             'host': host,
-            'dev': str(dev),
+            'dev': str(fn),
             'keycode': None,
             'key': None
         }
@@ -103,10 +102,9 @@ class MyKeypad (object):
     def poll (self):
         while True:
             try:
-                print ("Polling "+str(self.dev))
+                print ("Polling "+str(self.fn))
                 poll = select.poll()
-
-                f = os.open(self.dev, os.O_RDONLY)
+                f = os.open(self.fn, os.O_RDONLY)
 
 #                os.set_blocking(f, False)
                 poll.register(f)
@@ -117,7 +115,7 @@ class MyKeypad (object):
                     self.process(list(bytes))
 
             except IOError as e:
-                print (self.dev)
+                print (self.fn)
                 raise e
 
 
@@ -194,51 +192,34 @@ if __name__ == '__main__':
 
     try:
         daemons = {}
+        hids = hid.enumerate()
+        for f in hids:
+            print ("{}\tvendor={:04x}\tproduct={:04x}".format(f['path'], f['vendor_id'], f['product_id']))
+            print (f)
 
-        devs = [('/dev/'+os.path.basename(f), os.readlink(f)) for f in glob.glob('/sys/class/hidraw/*')]
-        for f,l in devs:
-#            daemons[f] = threading.Thread(
-            if "062A:4182" in l:
-                daemons[f] = threading.Thread(target=thread_device, args=(f,'wireless'))
+        devs = [f for f in hids if f['product_id'] == 0x7021 and f['vendor_id'] == 0x04e8]
+        for f in devs:
+            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])  
+            print (dev)
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
 
-            elif "04E8:7021" in l:
-                daemons[f] = threading.Thread(target=thread_device, args=(f,'bt302'))
+        devs = [f for f in hids if f['product_id'] == 0x9840 and f['vendor_id'] == 0x05a4]
+        for f in devs:
+            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])  
+            print (dev)
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
 
-            elif "9840:05A4" in l:
-                daemons[f] = threading.Thread(target=thread_device, args=(f,'wired'))
+        devs = [f for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
+        for f in devs:
+            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])  
+            print (dev)
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
 
-            elif "2571:4101" in l:
-                daemons[f] = threading.Thread(target=thread_device, args=(f,'presenter'))
-
-
-#        hids = hid.enumerate()
-#        for f in hids:
-#            print ("{}\tvendor={:04x}\tproduct={:04x}".format(f['path'], f['vendor_id'], f['product_id']))
-#            print (f)
-#
-#        devs = [f for f in hids if f['product_id'] == 0x7021 and f['vendor_id'] == 0x04e8]
-#        for f in devs:
-#            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])
-#            print (dev)
-#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'bt302'))
-#
-#        devs = [f for f in hids if f['product_id'] == 0x9840 and f['vendor_id'] == 0x05a4]
-#        for f in devs:
-#            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])
-#            print (dev)
-#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wired'))
-#
-#        devs = [f for f in hids if f['product_id'] == 0x4182 and f['vendor_id'] == 0x062a]
-#        for f in devs:
-#            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])
-#            print (dev)
-#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'wireless'))
-#
-#        devs = [f for f in hids if f['product_id'] == 0x4101 and f['vendor_id'] == 0x2571]
-#        for f in devs:
-#            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])
-#            print (dev)
-#            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
+        devs = [f for f in hids if f['product_id'] == 0x4101 and f['vendor_id'] == 0x2571]
+        for f in devs:
+            dev = hid.device(vid=f['vendor_id'], pid=f['product_id'])  
+            print (dev)
+            daemons[dev] = threading.Thread(target=thread_device, args=(dev,'presenter'))
 
 
 
