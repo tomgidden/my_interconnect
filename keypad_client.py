@@ -204,7 +204,7 @@ if __name__ == '__main__':
             elif "04E8:7021" in l:
                 daemons[f] = threading.Thread(target=thread_device, args=(f,'bt302'))
 
-            elif "9840:05A4" in l:
+            elif "05A4:9840" in l:
                 daemons[f] = threading.Thread(target=thread_device, args=(f,'wired'))
 
             elif "2571:4101" in l:
